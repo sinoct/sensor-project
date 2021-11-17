@@ -14,16 +14,16 @@ export default {
     },
     methods: {
         addItemToCart(purchase) {
-            console.log('PURCHASE', purchase);
+            console.log('item', purchase.item)
+            this.$emit('cartEvent', { ...purchase })
         },
         shopperMovement(shopper) {
             this.$emit('shopperMovement', { person: shopper.name, location: this.zoneNumber });
         }
     },
     created() {
-        this.eventBus.on(`cartEvent-${this.zoneNumber}`, this.addItemToCart);
         this.eventBus.on(`movement-zone-${this.zoneNumber}`, this.shopperMovement);
-        this.eventBus.on(`puchaseEvent-${this.zoneNumber}`, this.addItemToCart);
+        this.eventBus.on(`purchaseEvent-${this.zoneNumber}`, this.addItemToCart);
     }
 }
 </script>

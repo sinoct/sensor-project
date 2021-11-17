@@ -9,6 +9,8 @@
       <div class="start-button" :class="{ started: isStarted, stopped: !isStarted }" @click="isStarted = !isStarted">
         {{ startText }}
       </div>
+      <button @click="showAlertWindow = true">show alert</button>
+      <alert-window v-if="showAlertWindow" @clickedAway="showAlertWindow = false"></alert-window>
       </div>
       <div class="door">
         Front door is: {{ isDoorLocked }}
@@ -23,16 +25,16 @@
             <motion-sensor :zoneNumber="0" @shopperMovement="movementDetected" />
           </div>
           <div class="map-zone-1 zone">Food
-            <motion-sensor :zoneNumber="1" @shopperMovement="movementDetected" />
+            <motion-sensor :zoneNumber="1" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-2 zone">Clothes
-            <motion-sensor :zoneNumber="2" @shopperMovement="movementDetected" />
+            <motion-sensor :zoneNumber="2" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-3 zone">Gardening
-            <motion-sensor :zoneNumber="3" @shopperMovement="movementDetected" />
+            <motion-sensor :zoneNumber="3" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-4 zone">Electronics
-            <motion-sensor :zoneNumber="4" @shopperMovement="movementDetected" />
+            <motion-sensor :zoneNumber="4" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
         </div>
         <div class="logs">
@@ -47,11 +49,13 @@
 
 <script>
 import MotionSensor from '@/components/MotionSensor.vue';
+import AlertWindow from '@/components/AlertWindow.vue';
 
 export default {
     name: 'MainSceen',
     components: {
       MotionSensor,
+      AlertWindow,
     },
     data() {
       return {
@@ -59,6 +63,7 @@ export default {
         logs: '',
         shoppers: [],
         isStarted: false,
+        showAlertWindow: false,
         maskLimit: 3,
         soteLimit: 10,
         personIndex: 0,
@@ -100,9 +105,9 @@ export default {
         // buy item
         if (Math.random() > 0.7 && shopper.location.index !== 0) {
           let item = `${shopper.location.name} - item`
-          this.shoppers[shopperIndex].cart.push(item);
-          console.log('BUY');
-          this.eventBus.emit(`purchaseEvent-${shopper.location}`, { shopper, item });
+          //this.shoppers[shopperIndex].cart.push(item);
+          //console.log('shopper', shopper, shopper.location, 'item', item);
+          this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item });
         }
         // movement
         let newLocation = Math.floor(Math.random() * (shopper.location.neighbors.length))
@@ -115,12 +120,16 @@ export default {
         this.scrollToBottom();
       },
       purchaseDetected(params) {
-        this.logs = `${this.logs}\n${params.person} bought a/an ${this.zones[params.zoneIndex].name} - item`;
+        console.log('CUCC', params);
+        this.logs = `${this.logs}\n${params.shopper.name} bought a/an ${params.item}`;
         this.scrollToBottom();
       },
       scrollToBottom() {
         let div = this.$refs.logging;
         div.scrollTop = div.scrollHeight;
+      },
+      showAlert() {
+
       }
     },
     created() {

@@ -13,11 +13,21 @@
 </template>
 
 <script>
+import VueClickAway from 'vue3-click-away';
+
 export default {
     name: "AlertWindow",
     prop: {
         title: String,
         shopper: Object,
+    },
+    directives: {
+      vClickAway: VueClickAway,
+    },
+    methods: {
+      onClickAway() {
+        this.$emit('clickedAway');
+      }
     }
 }
 </script>
@@ -38,8 +48,34 @@ export default {
   justify-content: center;
 }
 
+.modal-container {
+  // width: 300px;
+  // margin: 0px auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  max-width: 600px;
+  margin-left: 3rem;
+  margin-right: 3rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  transition: all 0.3s ease;
+  font-family: Helvetica, Arial, sans-serif;
+  z-index: 9999;
+}
+
 .modal-wrapper {
   display: table-cell;
   vertical-align: middle;
+}
+
+.modal-enter .modal-container,
+.modal-leave-active .modal-container {
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
 }
 </style>

@@ -9,6 +9,7 @@
       <div class="start-button" :class="{ started: isStarted, stopped: !isStarted }" @click="isStarted = !isStarted">
         {{ startText }}
       </div>
+      <button @click="reset">reset</button>
       <alert-window v-if="showAlertWindow" @clickedAway="showAlertWindow = false" :shopper="thief"></alert-window>
       </div>
       <div class="door">
@@ -20,7 +21,7 @@
       </div>
       </div>
     </div>
-      <div class="content-wrapper">
+      <div class="content-wrapper row">
         <div class="map-wrapper">
           <div class="map-entrance zone">
             <div class="zone-text">
@@ -112,12 +113,12 @@ export default {
     methods: {
       doRandomStuff() {
         if (this.isStarted && !this.showAlertWindow) {
-          this.shoppers.forEach( (shopper, index) => {
+          this.shoppers.forEach( (shopper) => {
             if (shopper.isFinished) {
               this.checkout(shopper);
               this.removePerson(shopper);
             } else {
-              this.personAction(shopper, index);
+              this.personAction(shopper);
             }
           })
           if (!this.isDoorLocked) {
@@ -131,46 +132,45 @@ export default {
           let index = Math.floor(Math.random() * (this.names.length - 1));
           let name = this.names[index];
           this.names.splice(index, 1);
-          this.shoppers.push({ name, location: this.zones[0], cart: [], isFinished: false });
+          this.shoppers.push({ id: this.personIndex, name, location: this.zones[0], cart: [], isFinished: false });
           this.zones[0].shopperCounter++;
           this.personIndex += 1;
           this.logs = `${this.logs}\n${name} entered the shop.`;
         }
       },
       removePerson(shopper) {
+        console.log('EXIT', shopper.name);
         this.names.push(shopper.name);
         this.zones[0].shopperCounter--;
-        this.shoppers.pop(shopper);
+        let index = this.shoppers.findIndex((x) => x.name === shopper.name);
+        this.shoppers.splice(index, 1);
         this.logs = `${this.logs}\n${shopper.name} left the store.`;
         this.scrollToBottom();
       },
-      personAction(shopper, shopperIndex) {
+      personAction(shopper) {
         // console.log('SHOPPER', shopper, 'INDEX', shopperIndex); 
         // buy item
         if (Math.random() > 0.7 && shopper.location.index !== 0) {
           let item = `${shopper.location.name} - item`
-          this.shoppers[shopperIndex].cart.push(item);
-          //console.log('shopper', shopper, shopper.location, 'item', item);
+          shopper.cart.push(item);
           this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item });
         }
         // movement
         let random = Math.floor(Math.random() * (shopper.location.neighbors.length))
         let newLocation = shopper.location.neighbors[random];
         if (newLocation === 0) {
-          this.shoppers[shopperIndex].isFinished = true;
+          shopper.isFinished = true;
         }
         this.zones[shopper.location.index].shopperCounter--;
         this.zones[newLocation].shopperCounter++;
-        this.shoppers[shopperIndex].location = this.zones[newLocation];
+        shopper.location = this.zones[newLocation];
         this.eventBus.emit(`movement-zone-${newLocation}`, shopper )
       },
       movementDetected(params) {
-        //console.log('MOVEMENT', params);
         this.logs = `${this.logs}\n${params.person} moved to the ${this.zones[params.location].name} aisle.`;
         this.scrollToBottom();
       },
       purchaseDetected(params) {
-        //console.log('CUCC', params);
         this.logs = `${this.logs}\n${params.shopper.name} bought a/an ${params.item}`;
         this.scrollToBottom();
       },
@@ -185,7 +185,6 @@ export default {
       updateShoppers() {
         this.shopperList = '';
         for (const shopper of this.shoppers){
-          //console.log('UPDATE', shopper);
           this.shopperList = `${this.shopperList}\n${shopper.name}`;
         }
       },
@@ -195,6 +194,22 @@ export default {
         if (!result && shopper.cart.length > 0) {
           this.showAlert(shopper);
         }
+      },
+      reset() {
+        this.names = ['John', 'Rick Astley', 'Andrew', 'Shrek', 'Olivia', 'Ben Shapiro', 'William', 'Danny DeVito', 'Emma' ,'Silvester Stallone', 'Keanu Reeves'];
+        this.logs = '';
+        this.thief = {};
+        this.shoppers = [];
+        this.isStarted = false;
+        this.showAlertWindow = false;
+        this.personIndex = 0;
+        this.shopperList = '',
+        this.zones = [
+          { name: 'Entrance', index: 0, neighbors: [1, 2], shopperCounter: 0 },
+          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0 },
+          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0 },
+          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0 },
+          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0 }]
       }
     },
     created() {
@@ -241,6 +256,7 @@ export default {
       height: 400px;
       background: white;
       border: 2px solid black;
+      border-radius: 10px;
       width: 200px;
       overflow: scroll;
     }
@@ -253,6 +269,7 @@ export default {
     .shopper-list {
       height: 100px;
       background: white;
+      border-radius: 10px;
       border: 2px solid black;
       width: 200px;
       overflow: scroll;

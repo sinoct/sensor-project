@@ -14,7 +14,7 @@ export default {
     },
     methods: {
         addItemToCart(purchase) {
-            console.log('item', purchase.item)
+            //console.log('PURCHASE', purchase.item)
             this.$emit('cartEvent', { ...purchase })
         },
         shopperMovement(shopper) {

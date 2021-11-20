@@ -5,6 +5,11 @@
             <div class="modal-container">
               <div class="header-text">
                   Theft detected!
+                  <br>
+                  {{ shopper.name }} did not pay before leaving the shop!
+              </div>
+              <div class="confirm-button" @click="onClickAway">
+                Ok
               </div>
             </div>
           </div>
@@ -17,7 +22,7 @@ import VueClickAway from 'vue3-click-away';
 
 export default {
     name: "AlertWindow",
-    prop: {
+    props: {
         title: String,
         shopper: Object,
     },
@@ -27,7 +32,7 @@ export default {
     methods: {
       onClickAway() {
         this.$emit('clickedAway');
-      }
+      },
     }
 }
 </script>
@@ -77,5 +82,19 @@ export default {
 .modal-leave-active .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+.confirm-button {
+  background: #f1f1f1;
+  padding: 16px;
+  padding-left: 24px;
+  padding-right: 24px;
+  border-radius: 30px;
+  cursor: pointer;
+}
+.confirm-button:hover {
+  background: #cccccc;
+}
+.header-text {
+  padding: 10px;
 }
 </style>

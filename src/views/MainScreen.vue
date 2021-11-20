@@ -5,56 +5,67 @@
         <img class="mask" src="@/assets/mask.png" />
       </div>
       <div class="title">
-        <h1>Sensor Project</h1>
+        <h1>Security System</h1>
       <div class="start-button" :class="{ started: isStarted, stopped: !isStarted }" @click="isStarted = !isStarted">
         {{ startText }}
       </div>
-      <button @click="showAlertWindow = true">show alert</button>
       <alert-window v-if="showAlertWindow" @clickedAway="showAlertWindow = false" :shopper="thief"></alert-window>
       </div>
       <div class="door">
-        Front door is: {{ isDoorLocked }}
         <div class="shopperList">
-        Shoppers:
+        {{ personCount }} Shoppers:
         <div class="shopper-list" ref="shoppers">
           {{ shopperList }}
         </div>
       </div>
       </div>
     </div>
-      <div class="person-counter">
-        Number of people: {{ personCount }}
-      </div>
       <div class="content-wrapper">
         <div class="map-wrapper">
           <div class="map-entrance zone">
+            <div class="zone-text">
             Entrance
             <br>
             Shoppers: {{ zones[0].shopperCounter }}
+            </div>
+            <img class="image" v-if="!isDoorLocked" src="@/assets/door-open.png">
+            <img class="image" v-else src="@/assets/door-closed.png">
             <motion-sensor :zoneNumber="0" @shopperMovement="movementDetected" />
           </div>
           <div class="map-zone-1 zone">
+            <div class="zone-text">
             Food
             <br>
             Shoppers: {{ zones[1].shopperCounter }}
+            </div>
+            <img class="image"  src="@/assets/food.png">
             <motion-sensor :zoneNumber="1" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-2 zone">
+            <div class="zone-text">
             Clothes
             <br>
             Shoppers: {{ zones[2].shopperCounter }}
+            </div>
+            <img class="image"  src="@/assets/t-shirt.png">
             <motion-sensor :zoneNumber="2" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-3 zone">
+            <div class="zone-text">
             Gardening
             <br>
             Shoppers: {{ zones[3].shopperCounter }}
+            </div>
+            <img class="image"  src="@/assets/garden.png">
             <motion-sensor :zoneNumber="3" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
           <div class="map-zone-4 zone">
+            <div class="zone-text">
             Electronics
             <br>
             Shoppers: {{ zones[4].shopperCounter }}
+            </div>
+            <img class="image"  src="@/assets/electronics.png">
             <motion-sensor :zoneNumber="4" @shopperMovement="movementDetected" @cartEvent="purchaseDetected" />
           </div>
         </div>
@@ -86,8 +97,8 @@ export default {
         shoppers: [],
         isStarted: false,
         showAlertWindow: false,
-        maskLimit: 1,
-        storeLimit: 1,
+        maskLimit: 5,
+        storeLimit: 10,
         personIndex: 0,
         shopperList: '',
         zones: [
@@ -109,8 +120,8 @@ export default {
               this.personAction(shopper, index);
             }
           })
-          if (this.isDoorLocked === 'Open') {
-          this.addPerson();
+          if (!this.isDoorLocked) {
+            this.addPerson();
           }
           this.updateShoppers();
         }
@@ -180,7 +191,7 @@ export default {
       },
       checkout(shopper) {
         // true if the shopper payed
-        let result = Math.random() > 1 ? true: false;
+        let result = Math.random() > 0.05 ? true: false;
         if (!result && shopper.cart.length > 0) {
           this.showAlert(shopper);
         }
@@ -201,7 +212,7 @@ export default {
         return this.personCount >= this.maskLimit;
       },
       isDoorLocked() {
-        return this.personCount >= this.storeLimit ? 'Locked' : 'Open';
+        return this.personCount >= this.storeLimit;
       }
     }
 }
@@ -211,7 +222,9 @@ export default {
 .main-screen {
   .start-button {
     border: 2px solid black;
-    background: "#1F1F1F";
+    background: #f1f1f1;
+    padding: 10px;
+    border-radius: 20px;
   }
   .started:hover {
     background: red;
@@ -220,33 +233,33 @@ export default {
     background: green;
   }
   .logs {
-    margin-top: 32px;
     white-space: break-spaces;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     .log-table {
       height: 400px;
+      background: white;
       border: 2px solid black;
       width: 200px;
       overflow: scroll;
     }
   }
   .shopperList {
-    margin-top: 32px;
     white-space: break-spaces;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     .shopper-list {
       height: 100px;
+      background: white;
       border: 2px solid black;
       width: 200px;
       overflow: scroll;
 }
 }
   .mask {
-    width: 100px;
+    width: 150px;
     opacity: 0.5;
   }
   .isActive {
@@ -288,6 +301,7 @@ export default {
   grid-area: four;
 }
 .map-wrapper {
+  border-radius: 30px;
   display: grid;
   flex: 1;
   grid-gap: 10px;
@@ -295,7 +309,7 @@ export default {
   'entrance one three'
   'entrance two four';
   padding: 16px;
-  background-color: #2196F3;
+  background-color: #f35921;
   margin-right: 16px;
 }
 .content-wrapper {
@@ -304,9 +318,18 @@ export default {
 }
 .zone {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: white;
+  background: rgb(203, 243, 255);
   border: 2px solid black; 
+}
+.zone-text {
+  background: #d8d8d8;
+  padding: 5px;
+  border-radius: 20px;
+}
+.image {
+  width: 100px;
 }
 </style>

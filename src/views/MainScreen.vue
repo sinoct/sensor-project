@@ -9,7 +9,11 @@
       <div class="start-button" :class="{ started: isStarted, stopped: !isStarted }" @click="isStarted = !isStarted">
         {{ startText }}
       </div>
-      <button @click="reset">reset</button>
+      <label for="maskLimit"> Mask limit: (0-30) </label>
+      <input type="number" id="maskLimit" min="0" max="30" v-model="maskLimit">
+      <label for="storeLimit"> Store limit: (0-30) </label>
+      <input type="number" id="storeLimit" min="1" max="30" v-model="storeLimit">
+      <button class="reset-button" @click="reset">reset</button>
       <alert-window v-if="showAlertWindow" @clickedAway="showAlertWindow = false" :shopper="thief"></alert-window>
       </div>
       <div class="door">
@@ -104,10 +108,10 @@ export default {
         shopperList: '',
         zones: [
           { name: 'Entrance', index: 0, neighbors: [1, 2], shopperCounter: 0 },
-          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0 },
-          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0 },
-          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0 },
-          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0 }],
+          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ 'Pizza', 'Chicken', 'Salad' ] },
+          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ 'Jacket', 'Shirt', 'Shoes' ] },
+          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ 'Shovel', 'Flowers', 'Hose' ] },
+          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ 'Headphones', 'Laptop', 'Smnartphone' ] }],
       };
     },
     methods: {
@@ -151,7 +155,9 @@ export default {
         // console.log('SHOPPER', shopper, 'INDEX', shopperIndex); 
         // buy item
         if (Math.random() > 0.7 && shopper.location.index !== 0) {
-          let item = `${shopper.location.name} - item`
+          let itemNumber = Math.floor(Math.random() * shopper.location.items.length);
+          console.log(itemNumber);
+          let item = shopper.location.items[itemNumber];
           shopper.cart.push(item);
           this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item });
         }
@@ -171,7 +177,7 @@ export default {
         this.scrollToBottom();
       },
       purchaseDetected(params) {
-        this.logs = `${this.logs}\n${params.shopper.name} bought a/an ${params.item}`;
+        this.logs = `${this.logs}\n${params.shopper.name} bought ${params.item}`;
         this.scrollToBottom();
       },
       scrollToBottom() {
@@ -206,10 +212,10 @@ export default {
         this.shopperList = '',
         this.zones = [
           { name: 'Entrance', index: 0, neighbors: [1, 2], shopperCounter: 0 },
-          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0 },
-          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0 },
-          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0 },
-          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0 }]
+          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ 'Pizza', 'Chicken', 'Salad' ] },
+          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ 'Jacket', 'Shirt', 'Shoes' ] },
+          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ 'Shovel', 'Flowers', 'Hose' ] },
+          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ 'Headphones', 'Laptop', 'Smnartphone' ] }]
       }
     },
     created() {
@@ -228,6 +234,18 @@ export default {
       },
       isDoorLocked() {
         return this.personCount >= this.storeLimit;
+      }
+    },
+    watch: {
+      maskLimit(newValue) {
+        if (newValue > this.storeLimit) {
+          this.maskLimit = this.storeLimit;
+        }
+      },
+      storeLimit(newValue) {
+        if (newValue < this.maskLimit) {
+          this.storeLimit = this.maskLimit;
+        }
       }
     }
 }

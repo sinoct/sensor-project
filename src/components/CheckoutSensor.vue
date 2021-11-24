@@ -11,7 +11,6 @@ export default {
     },
     methods: {
         checkout(shopper) {
-            console.log('CHECKOUT', shopper);
             this.$emit('checkedOut',shopper)
         },
     },

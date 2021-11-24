@@ -20,9 +20,12 @@
       <div class="door">
         <div class="shopperList">
         {{ personCount }} Shoppers:
-        <div class="shopper-list" ref="shoppers">
-          {{ shopperList }}
+        <div class="shopper-list">
+        <shopper-component v-for="shopper in shoppers" :key="shopper.id" :shopper="shopper" @pause="this.isStarted = false" @resume="this.isStarted = true"/>
         </div>
+        <!-- <div class="shopper-list" ref="shoppers">
+          {{ shopperList }}
+        </div> -->
       </div>
       </div>
     </div>
@@ -90,6 +93,7 @@
 import MotionSensor from '@/components/MotionSensor.vue';
 import AlertWindow from '@/components/AlertWindow.vue';
 import CheckoutSensor from '@/components/CheckoutSensor.vue';
+import ShopperComponent from '@/components/ShopperComponent.vue';
 
 export default {
     name: 'MainSceen',
@@ -97,6 +101,7 @@ export default {
       MotionSensor,
       AlertWindow,
       CheckoutSensor,
+      ShopperComponent,
     },
     data() {
       return {
@@ -162,7 +167,7 @@ export default {
           let itemNumber = Math.floor(Math.random() * shopper.location.items.length);
           console.log(itemNumber);
           let item = shopper.location.items[itemNumber];
-          shopper.cart.push(item.name);
+          shopper.cart.push(item);
           shopper.cartValue += item.price;
           this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item: item.name });
         }

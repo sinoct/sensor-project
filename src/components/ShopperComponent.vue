@@ -11,7 +11,10 @@
                 Name: {{ shopper.name }}
                 <br>
                 <br>
-                Cart items:
+                Location: {{ shopper.location.name }}
+                <br>
+                <br>
+                Shopping Cart:
                 <div class="cart-list">
                     <div class="empty" v-if="shopper.cart.length === 0" >
                         Empty

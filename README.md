@@ -1,4 +1,4 @@
-# Szenzor és Aktuátor hálózatok beadandó
+# Erős Gergő - Szenzor és Aktuátor hálózatok beadandó
 
 ## Az alkalmazás elérhető ezen a linken elérhető: https://sinoct.github.io/sensor-project/
 

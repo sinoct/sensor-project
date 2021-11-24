@@ -9,10 +9,11 @@
       <div class="start-button" :class="{ started: isStarted, stopped: !isStarted }" @click="isStarted = !isStarted">
         {{ startText }}
       </div>
+      <div class="label-divider"></div>
       <label for="maskLimit"> Mask limit: (0-30) </label>
-      <input type="number" id="maskLimit" min="0" max="30" v-model="maskLimit">
+      <input class="input" type="number" id="maskLimit" min="0" max="30" v-model="maskLimit">
       <label for="storeLimit"> Store limit: (0-30) </label>
-      <input type="number" id="storeLimit" min="1" max="30" v-model="storeLimit">
+      <input class="input" type="number" id="storeLimit" min="1" max="30" v-model="storeLimit">
       <button class="reset-button" @click="reset">reset</button>
       <alert-window v-if="showAlertWindow" @clickedAway="showAlertWindow = false" :shopper="thief"></alert-window>
       </div>
@@ -36,6 +37,7 @@
             <img class="image" v-if="!isDoorLocked" src="@/assets/door-open.png">
             <img class="image" v-else src="@/assets/door-closed.png">
             <motion-sensor :zoneNumber="0" @shopperMovement="movementDetected" />
+            <checkout-sensor @checkedOut="checkoutDetected"></checkout-sensor>
           </div>
           <div class="map-zone-1 zone">
             <div class="zone-text">
@@ -87,16 +89,18 @@
 <script>
 import MotionSensor from '@/components/MotionSensor.vue';
 import AlertWindow from '@/components/AlertWindow.vue';
+import CheckoutSensor from '@/components/CheckoutSensor.vue';
 
 export default {
     name: 'MainSceen',
     components: {
       MotionSensor,
       AlertWindow,
+      CheckoutSensor,
     },
     data() {
       return {
-        names: ['John', 'Rick Astley', 'Andrew', 'Shrek', 'Olivia', 'Ben Shapiro', 'William', 'Danny DeVito', 'Emma' ,'Silvester Stallone', 'Keanu Reeves'],
+        names: [ 'Noah', 'John','Andrew', 'Rick Astley', 'Oliver', 'Henry', 'Alexander', 'Mason', 'Ethan', 'Daniel', 'Shrek', 'Jacob', 'Logan','Keanu Reeves' ,'Sebastian', 'Danny DeVito','Owen', 'Theodore', 'Samuel', 'Charlotte', 'Isabella', 'Hannah', 'Zoe', 'Stella', 'Lucy','William', 'Danny DeVito', 'Emma' ,'Silvester Stallone', 'Emma' ],
         logs: '',
         thief: {},
         shoppers: [],
@@ -108,10 +112,10 @@ export default {
         shopperList: '',
         zones: [
           { name: 'Entrance', index: 0, neighbors: [1, 2], shopperCounter: 0 },
-          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ 'Pizza', 'Chicken', 'Salad' ] },
-          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ 'Jacket', 'Shirt', 'Shoes' ] },
-          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ 'Shovel', 'Flowers', 'Hose' ] },
-          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ 'Headphones', 'Laptop', 'Smnartphone' ] }],
+          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ { name: 'Pizza', price: 2 }, { name: 'Chicken', price: 4 } , { name: 'Bread', price: 3} ] },
+          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ { name: 'Jacket', price: 30 }, { name: 'Shirt', price: 10 }, { name: 'Shoes', price: 20 } ] },
+          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ { name: 'Shovel', price: 15 }, { name: 'Flowers', price: 3 }, { name: 'Hose', price: 5 } ] },
+          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ { name: 'Headphones', price: 50 }, { name: 'Laptop', price: 999 }, { name: 'Smnartphone', price: 499 }] }],
       };
     },
     methods: {
@@ -136,7 +140,7 @@ export default {
           let index = Math.floor(Math.random() * (this.names.length - 1));
           let name = this.names[index];
           this.names.splice(index, 1);
-          this.shoppers.push({ id: this.personIndex, name, location: this.zones[0], cart: [], isFinished: false });
+          this.shoppers.push({ id: this.personIndex, name, location: this.zones[0], cart: [], isFinished: false, cartValue: 0 });
           this.zones[0].shopperCounter++;
           this.personIndex += 1;
           this.logs = `${this.logs}\n${name} entered the shop.`;
@@ -158,8 +162,9 @@ export default {
           let itemNumber = Math.floor(Math.random() * shopper.location.items.length);
           console.log(itemNumber);
           let item = shopper.location.items[itemNumber];
-          shopper.cart.push(item);
-          this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item });
+          shopper.cart.push(item.name);
+          shopper.cartValue += item.price;
+          this.eventBus.emit(`purchaseEvent-${shopper.location.index}`, { shopper, item: item.name });
         }
         // movement
         let random = Math.floor(Math.random() * (shopper.location.neighbors.length))
@@ -180,6 +185,9 @@ export default {
         this.logs = `${this.logs}\n${params.shopper.name} bought ${params.item}`;
         this.scrollToBottom();
       },
+      checkoutDetected(params) {
+        this.logs= `${this.logs}\n${params.name} payed ${params.cartValue}$`;
+      },
       scrollToBottom() {
         /* let div = this.$refs.logging;
         div.scrollTop = div.scrollHeight;*/
@@ -196,13 +204,17 @@ export default {
       },
       checkout(shopper) {
         // true if the shopper payed
-        let result = Math.random() > 0.05 ? true: false;
-        if (!result && shopper.cart.length > 0) {
-          this.showAlert(shopper);
+        if (shopper.cart.length > 0) {
+          let result = Math.random() > 0.05 ? true: false;
+          if (!result) {
+            this.showAlert(shopper);
+          } else {
+            this.eventBus.emit('checkout-event', shopper)
+          }
         }
       },
       reset() {
-        this.names = ['John', 'Rick Astley', 'Andrew', 'Shrek', 'Olivia', 'Ben Shapiro', 'William', 'Danny DeVito', 'Emma' ,'Silvester Stallone', 'Keanu Reeves'];
+        this.names = [ 'Noah', 'John','Andrew', 'Rick Astley', 'Oliver', 'Henry', 'Alexander', 'Mason', 'Ethan', 'Daniel', 'Shrek', 'Jacob', 'Logan','Keanu Reeves' ,'Sebastian', 'Danny DeVito','Owen', 'Theodore', 'Samuel', 'Charlotte', 'Isabella', 'Hannah', 'Zoe', 'Stella', 'Lucy','William', 'Danny DeVito', 'Emma' ,'Silvester Stallone', 'Emma' ];
         this.logs = '';
         this.thief = {};
         this.shoppers = [];
@@ -212,10 +224,10 @@ export default {
         this.shopperList = '',
         this.zones = [
           { name: 'Entrance', index: 0, neighbors: [1, 2], shopperCounter: 0 },
-          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ 'Pizza', 'Chicken', 'Salad' ] },
-          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ 'Jacket', 'Shirt', 'Shoes' ] },
-          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ 'Shovel', 'Flowers', 'Hose' ] },
-          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ 'Headphones', 'Laptop', 'Smnartphone' ] }]
+          { name: 'Food', index: 1, neighbors: [0, 2, 3], shopperCounter: 0, items: [ { name: 'Pizza', price: 2 }, { name: 'Chicken', price: 4 } , { name: 'Bread', price: 3} ] },
+          { name: 'Clothes', index: 2, neighbors: [0, 1, 4], shopperCounter: 0, items: [ { name: 'Jacket', price: 30 }, { name: 'Shirt', price: 10 }, { name: 'Shoes', price: 20 } ] },
+          { name: 'Gardening', index: 3, neighbors: [1, 4], shopperCounter: 0, items: [ { name: 'Shovel', price: 15 }, { name: 'Flowers', price: 3 }, { name: 'Hose', price: 5 } ] },
+          { name: 'Electronics', index: 4, neighbors: [2, 3], shopperCounter: 0, items: [ { name: 'Headphones', price: 50 }, { name: 'Laptop', price: 999 }, { name: 'Smnartphone', price: 499 }] }]
       }
     },
     created() {
@@ -275,7 +287,8 @@ export default {
       background: white;
       border: 2px solid black;
       border-radius: 10px;
-      width: 200px;
+      line-height: 25px;
+      width: 400px;
       overflow: scroll;
     }
   }
@@ -366,5 +379,21 @@ export default {
 }
 .image {
   width: 100px;
+}
+.input {
+  padding: 8px;
+  border-radius: 20px;
+}
+.reset-button {
+  padding: 8px;
+  margin-left: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.reset-button:hover {
+  background: #f1f1f1;
+}
+.label-divider {
+  margin-top: 16px;
 }
 </style>

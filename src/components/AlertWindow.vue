@@ -7,6 +7,8 @@
                   Theft detected!
                   <br>
                   {{ shopper.name }} did not pay before leaving the shop!
+                  <br>
+                  Value stolen: {{ shopper.cartValue}}$
               </div>
               <div class="confirm-button" @click="onClickAway">
                 Ok

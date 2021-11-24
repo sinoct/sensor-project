@@ -13,7 +13,9 @@
                 <br>
                 Cart items:
                 <div class="cart-list">
-                    
+                    <div class="empty" v-if="shopper.cart.length === 0" >
+                        Empty
+                    </div>
                     <div v-for="(item, index) in shopper.cart" :key="index">
                         {{ item.name }} ( ${{ item.price }} )
                     </div>
